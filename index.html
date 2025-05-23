@@ -1,1073 +1,499 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Underwatermelon: Fruit Merge</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            user-select: none;
-            -webkit-user-select: none;
-            -webkit-touch-callout: none;
-        }
-        
-        body {
-            font-family: 'Trebuchet MS', 'Arial Rounded MT Bold', sans-serif;
-            background: linear-gradient(180deg, #4A90E2 0%, #2E5C8A 50%, #1A3A5C 100%);
-            overflow: hidden;
-            touch-action: none;
-            height: 100vh;
-            width: 100vw;
-        }
-        
-        #gameContainer {
-            position: relative;
-            width: 100vw;
-            height: 100vh;
-            background: 
-                radial-gradient(circle at 20% 80%, rgba(72, 209, 204, 0.3) 0%, transparent 50%),
-                radial-gradient(circle at 80% 20%, rgba(135, 206, 235, 0.3) 0%, transparent 50%),
-                linear-gradient(180deg, #4A90E2 0%, #2E5C8A 30%, #1E4A6B 70%, #0F2A3D 100%);
-        }
-        
-        /* Menu Styles */
-        #menu {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            background: linear-gradient(45deg, #20B2AA, #4682B4);
-            z-index: 1000;
-        }
-        
-        #title {
-            font-size: 1.8rem;
-            color: #FFD700;
-            text-shadow: 3px 3px 6px rgba(0,0,0,0.5);
-            margin-bottom: 2rem;
-            text-align: center;
-            animation: float 3s ease-in-out infinite;
-            padding: 0 20px;
-        }
-        
-        @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
-        }
-        
-        .menu-btn {
-            background: linear-gradient(45deg, #32CD32, #228B22);
-            border: none;
-            color: white;
-            padding: 15px 30px;
-            font-size: 1.1rem;
-            border-radius: 25px;
-            margin: 8px;
-            cursor: pointer;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            transition: all 0.3s ease;
-            font-weight: bold;
-            min-width: 200px;
-        }
-        
-        .menu-btn:active {
-            transform: scale(0.95);
-            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-        }
-        
-        /* Game UI */
-        #gameUI {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            display: none;
-        }
-        
-        #scoreBar {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 8%;
-            background: rgba(0,0,0,0.7);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0 15px;
-            color: white;
-            font-size: 0.9rem;
-            font-weight: bold;
-            z-index: 10;
-        }
-        
-        #comboDisplay {
-            color: #FFD700;
-            font-size: 0.8rem;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
-        }
-        
-        #gameCanvas {
-            position: absolute;
-            top: 8%;
-            left: 50%;
-            transform: translateX(-50%);
-            border: 4px solid #8B4513;
-            border-radius: 12px;
-            background: 
-                radial-gradient(circle at 30% 70%, rgba(173, 216, 230, 0.4) 0%, transparent 60%),
-                radial-gradient(circle at 70% 30%, rgba(135, 206, 235, 0.3) 0%, transparent 50%),
-                linear-gradient(180deg, rgba(173, 216, 230, 0.6) 0%, rgba(100, 149, 237, 0.7) 50%, rgba(65, 105, 225, 0.8) 100%);
-            box-shadow: 
-                inset 0 0 30px rgba(0, 100, 150, 0.4),
-                0 8px 32px rgba(0, 0, 0, 0.3),
-                0 4px 16px rgba(0, 0, 0, 0.2);
-        }
-        
-        #waterline {
-            position: absolute;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 300px;
-            height: 4px;
-            background: linear-gradient(90deg, #FF4444, #FF6B6B, #FF8888, #FF6B6B, #FF4444);
-            border-radius: 2px;
-            opacity: 0.9;
-            animation: dangerPulse 1.5s ease-in-out infinite;
-            bottom: calc(8% + 80px);
-            z-index: 5;
-            box-shadow: 0 0 15px rgba(255, 68, 68, 0.6);
-        }
-        
-        @keyframes dangerPulse {
-            0%, 100% { 
-                opacity: 0.7; 
-                transform: translateX(-50%) scaleY(1);
-                box-shadow: 0 0 15px rgba(255, 68, 68, 0.4);
-            }
-            50% { 
-                opacity: 1; 
-                transform: translateX(-50%) scaleY(1.2);
-                box-shadow: 0 0 25px rgba(255, 68, 68, 0.8);
-            }
-        }
-        
-        #nextFruit {
-            font-size: 1.2rem;
-            background: linear-gradient(145deg, rgba(255,255,255,0.9), rgba(220,220,220,0.8));
-            padding: 8px 12px;
-            border-radius: 50%;
-            border: 3px solid rgba(255,255,255,0.6);
-            box-shadow: 
-                0 4px 12px rgba(0,0,0,0.2),
-                inset 0 2px 4px rgba(255,255,255,0.3);
-            backdrop-filter: blur(10px);
-        }
-        
-        #pauseBtn {
-            position: absolute;
-            top: calc(8% + 10px);
-            left: 15px;
-            background: rgba(0,0,0,0.7);
-            color: white;
-            border: none;
-            padding: 8px;
-            border-radius: 50%;
-            font-size: 1rem;
-            cursor: pointer;
-            z-index: 100;
-            width: 40px;
-            height: 40px;
-        }
-        
-        #gameOverModal, #instructions {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.8);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 2000;
-        }
-        
-        .modal-content {
-            background: linear-gradient(45deg, #20B2AA, #4682B4);
-            padding: 30px;
-            border-radius: 20px;
-            text-align: center;
-            color: white;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            max-width: 90%;
-            max-height: 80%;
-            overflow-y: auto;
-        }
-        
-        .modal-content h2 {
-            margin-bottom: 20px;
-            font-size: 1.8rem;
-            color: #FFD700;
-        }
-        
-        .modal-content p {
-            margin: 10px 0;
-            line-height: 1.5;
-            text-align: left;
-        }
-        
-        .danger-warning {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: linear-gradient(145deg, #FF4444, #CC0000);
-            color: white;
-            padding: 20px 25px;
-            border-radius: 20px;
-            font-size: 1.3rem;
-            font-weight: bold;
-            display: none;
-            animation: dangerAlert 0.6s ease-in-out infinite;
-            z-index: 500;
-            box-shadow: 
-                0 8px 25px rgba(255, 0, 0, 0.4),
-                inset 0 2px 4px rgba(255, 255, 255, 0.2);
-            border: 3px solid rgba(255, 255, 255, 0.3);
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
-        }
-        
-        @keyframes dangerAlert {
-            0%, 100% { 
-                background: linear-gradient(145deg, #FF4444, #CC0000);
-                transform: translate(-50%, -50%) scale(1);
-                box-shadow: 0 8px 25px rgba(255, 0, 0, 0.4);
-            }
-            50% { 
-                background: linear-gradient(145deg, #FF6666, #FF0000);
-                transform: translate(-50%, -50%) scale(1.05);
-                box-shadow: 0 12px 35px rgba(255, 0, 0, 0.6);
-            }
-        }
-        
-        .octopus {
-            position: absolute;
-            left: 10px;
-            top: 60%;
-            font-size: 3rem;
-            animation: octopusFloat 4s ease-in-out infinite;
-            z-index: 1;
-        }
-        
-        @keyframes octopusFloat {
-            0%, 100% { transform: translateY(0px) rotate(-2deg); }
-            50% { transform: translateY(-15px) rotate(2deg); }
-        }
-        
-        .speech-bubble {
-            position: absolute;
-            left: 70px;
-            top: 50%;
-            background: rgba(255,255,255,0.95);
-            color: #333;
-            padding: 8px 12px;
-            border-radius: 15px;
-            font-size: 0.8rem;
-            font-weight: bold;
-            opacity: 0;
-            transform: scale(0);
-            transition: all 0.3s ease;
-            z-index: 10;
-            max-width: 100px;
-        }
-        
-        .speech-bubble::after {
-            content: '';
-            position: absolute;
-            left: -8px;
-            top: 50%;
-            transform: translateY(-50%);
-            border: 8px solid transparent;
-            border-right-color: rgba(255,255,255,0.95);
-        }
-        
-        .speech-bubble.show {
-            opacity: 1;
-            transform: scale(1);
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Underwatermelon – Fruit Merge</title>
+
+<style>
+/* ───────── GENERAL RESET ───────── */
+*{margin:0;padding:0;box-sizing:border-box;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+
+/* ───────── GLOBAL / BODY ───────── */
+body{
+    font-family:'Trebuchet MS','Arial Rounded MT Bold','Comic Sans MS',cursive,sans-serif;
+    background:linear-gradient(180deg,#4A90E2 0%,#2E5C8A 50%,#1A3A5C 100%);
+    overflow:hidden;touch-action:none;height:100vh;width:100vw;
+}
+
+/* ───────── MAIN CONTAINER ───────── */
+#gameContainer{
+    position:relative;width:100vw;height:100vh;
+    background:
+        radial-gradient(circle at 20% 80%,rgba(72,209,204,.30) 0%,transparent 50%),
+        radial-gradient(circle at 80% 20%,rgba(135,206,235,.30) 0%,transparent 50%),
+        linear-gradient(180deg,#4A90E2 0%,#2E5C8A 30%,#1E4A6B 70%,#0F2A3D 100%);
+}
+
+/* ───────── MENU ───────── */
+#menu{
+    position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;align-items:center;
+    background:linear-gradient(45deg,#20B2AA,#4682B4);z-index:1000;
+}
+#title{
+    font-size:1.8rem;color:#FFD700;text-shadow:3px 3px 6px rgba(0,0,0,.5);
+    margin-bottom:2rem;text-align:center;animation:float 3s ease-in-out infinite;padding:0 20px;
+}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+.menu-btn{
+    background:linear-gradient(45deg,#32CD32,#228B22);border:none;color:#fff;padding:15px 30px;
+    font-size:1.1rem;border-radius:25px;margin:8px;cursor:pointer;font-weight:bold;min-width:200px;
+    box-shadow:0 4px 15px rgba(0,0,0,.3);transition:all .3s;
+}
+.menu-btn:active{transform:scale(.95);box-shadow:0 2px 10px rgba(0,0,0,.3)}
+
+/* ───────── GAME UI ───────── */
+#gameUI{position:absolute;inset:0;display:none}
+#scoreBar{
+    position:absolute;inset:0 auto auto 0;height:8%;background:rgba(0,0,0,.7);
+    display:flex;justify-content:space-between;align-items:center;padding:0 15px;
+    color:#fff;font-size:.9rem;font-weight:bold;z-index:10;
+}
+#comboDisplay{color:#FFD700;font-size:.8rem;text-shadow:2px 2px 4px rgba(0,0,0,.8)}
+#pauseBtn{
+    position:absolute;top:calc(8% + 10px);left:15px;width:40px;height:40px;
+    background:rgba(0,0,0,.7);border:none;border-radius:50%;color:#fff;font-size:1rem;cursor:pointer;z-index:100;
+}
+
+/* ───────── CANVAS FRAME ───────── */
+#gameCanvas{
+    position:absolute;top:8%;left:50%;transform:translateX(-50%);
+    width:300px;height:400px;border:4px solid #8B4513;border-radius:12px;
+    background:
+        radial-gradient(circle at 30% 70%,rgba(173,216,230,.4) 0%,transparent 60%),
+        radial-gradient(circle at 70% 30%,rgba(135,206,235,.3) 0%,transparent 50%),
+        linear-gradient(180deg,rgba(173,216,230,.6) 0%,rgba(100,149,237,.7) 50%,rgba(65,105,225,.8) 100%);
+    box-shadow:
+        inset 0 0 30px rgba(0,100,150,.4),
+        0 8px 32px rgba(0,0,0,.3),
+        0 4px 16px rgba(0,0,0,.2);
+}
+
+/* ───────── WATERLINE (DANGER) ───────── */
+#waterline{
+    position:absolute;left:50%;transform:translateX(-50%);
+    width:300px;height:4px;border-radius:2px;bottom:calc(8% + 80px);z-index:5;opacity:.9;
+    background:linear-gradient(90deg,#FF4444,#FF6B6B,#FF8888,#FF6B6B,#FF4444);
+    animation:dangerPulse 1.5s ease-in-out infinite;
+    box-shadow:0 0 15px rgba(255,68,68,.6);
+}
+@keyframes dangerPulse{
+    0%,100%{opacity:.7;transform:translateX(-50%) scaleY(1);box-shadow:0 0 15px rgba(255,68,68,.4)}
+    50%{opacity:1;transform:translateX(-50%) scaleY(1.2);box-shadow:0 0 25px rgba(255,68,68,.8)}
+}
+
+/* ───────── NEXT FRUIT BADGE ───────── */
+#nextFruit{
+    font-size:1.2rem;padding:8px 12px;border-radius:50%;
+    background:linear-gradient(145deg,rgba(255,255,255,.9),rgba(220,220,220,.8));
+    border:3px solid rgba(255,255,255,.6);
+    box-shadow:0 4px 12px rgba(0,0,0,.2),inset 0 2px 4px rgba(255,255,255,.3);
+    backdrop-filter:blur(10px);
+}
+
+/* ───────── DANGER POPUP ───────── */
+.danger-warning{
+    position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+    background:linear-gradient(145deg,#FF4444,#CC0000);color:#fff;padding:20px 25px;border-radius:20px;
+    font-size:1.3rem;font-weight:bold;display:none;z-index:500;
+    animation:dangerAlert .6s ease-in-out infinite;
+    box-shadow:0 8px 25px rgba(255,0,0,.4),inset 0 2px 4px rgba(255,255,255,.2);
+    border:3px solid rgba(255,255,255,.3);text-shadow:2px 2px 4px rgba(0,0,0,.8);
+}
+@keyframes dangerAlert{
+    0%,100%{background:linear-gradient(145deg,#FF4444,#CC0000);transform:translate(-50%,-50%) scale(1);}
+    50%{background:linear-gradient(145deg,#FF6666,#FF0000);transform:translate(-50%,-50%) scale(1.05);}
+}
+
+/* ───────── OCTOPUS & SPEECH ───────── */
+.octopus{position:absolute;left:10px;top:60%;font-size:3rem;animation:octopusFloat 4s ease-in-out infinite;z-index:1}
+@keyframes octopusFloat{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-15px) rotate(2deg)}}
+.speech-bubble{
+    position:absolute;left:70px;top:50%;padding:8px 12px;border-radius:15px;max-width:100px;
+    background:rgba(255,255,255,.95);color:#333;font-weight:bold;font-size:.8rem;opacity:0;transform:scale(0);
+    transition:.3s;z-index:10;
+}
+.speech-bubble::after{
+    content:'';position:absolute;left:-8px;top:50%;transform:translateY(-50%);
+    border:8px solid transparent;border-right-color:rgba(255,255,255,.95);
+}
+.speech-bubble.show{opacity:1;transform:scale(1)}
+
+/* ───────── MODALS (instructions / game-over) ───────── */
+#gameOverModal,#instructions{
+    position:fixed;inset:0;display:none;justify-content:center;align-items:center;
+    background:rgba(0,0,0,.8);z-index:2000;
+}
+.modal-content{
+    background:linear-gradient(45deg,#20B2AA,#4682B4);padding:30px;border-radius:20px;
+    text-align:center;color:#fff;box-shadow:0 10px 30px rgba(0,0,0,.5);
+    max-width:90%;max-height:80%;overflow-y:auto;
+}
+.modal-content h2{margin-bottom:20px;font-size:1.8rem;color:#FFD700}
+.modal-content p{margin:10px 0;line-height:1.5;text-align:left}
+</style>
 </head>
+
 <body>
-    <div id="gameContainer">
-        <!-- Menu -->
-        <div id="menu">
-            <div id="title">🐙 UNDERWATERMELON 🍉</div>
-            <button class="menu-btn" onclick="startGame()">🎮 PLAY</button>
-            <button class="menu-btn" onclick="showInstructions()">❓ HOW TO PLAY</button>
-        </div>
-        
-        <!-- Instructions Modal -->
-        <div id="instructions">
-            <div class="modal-content">
-                <h2>🍉 HOW TO PLAY 🍉</h2>
-                <p>🎯 <strong>Goal:</strong> Merge identical fruits to create bigger ones!</p>
-                <p>📱 <strong>Controls:</strong> Tap anywhere on the screen to drop fruits</p>
-                <p>🔄 <strong>Merging:</strong> When two identical fruits touch, they combine into the next fruit</p>
-                <p>📈 <strong>Scoring:</strong> Bigger fruits = more points! Chain merges for combo bonuses</p>
-                <p>⚠️ <strong>Danger Zone:</strong> Don't let fruits overflow the red line!</p>
-                <p>🏆 <strong>Fruit Chain:</strong><br>
-                🍒 → 🍓 → 🍇 → 🍊 → 🍎 → 🍐 → 🍑 → 🍍 → 🍈 → 🍉</p>
-                <button class="menu-btn" onclick="hideInstructions()">Got it!</button>
-            </div>
-        </div>
-        
-        <!-- Game UI -->
-        <div id="gameUI">
-            <button id="pauseBtn" onclick="togglePause()">⏸️</button>
-            
-            <div id="scoreBar">
-                <div id="score">Score: 0</div>
-                <div id="comboDisplay"></div>
-                <div id="nextFruit">🍒</div>
-            </div>
-            
-            <canvas id="gameCanvas" width="300" height="400"></canvas>
-            <div id="waterline"></div>
-            
-            <div class="octopus">🐙</div>
-            <div class="speech-bubble" id="speechBubble"></div>
-            
-            <div class="danger-warning" id="dangerWarning">
-                ⚠️ DANGER ZONE! ⚠️
-            </div>
-        </div>
-        
-        <!-- Game Over Modal -->
-        <div id="gameOverModal">
-            <div class="modal-content">
-                <h2>Game Over!</h2>
-                <div id="finalScore"></div>
-                <div id="finalStats"></div>
-                <button class="menu-btn" onclick="restartGame()">🔄 RETRY</button>
-                <button class="menu-btn" onclick="backToMenu()">🏠 MENU</button>
-            </div>
+<div id="gameContainer">
+    <!-- ─────── Menu ─────── -->
+    <div id="menu">
+        <div id="title">🐙 UNDERWATERMELON 🍉</div>
+        <button class="menu-btn" onclick="startGame()">🎮 PLAY</button>
+        <button class="menu-btn" onclick="showInstructions()">❓ HOW TO PLAY</button>
+    </div>
+
+    <!-- ─────── Instructions ─────── -->
+    <div id="instructions">
+        <div class="modal-content">
+            <h2>🍉 HOW TO PLAY 🍉</h2>
+            <p>🎯 <strong>Goal:</strong> Merge identical fruits to create bigger ones!</p>
+            <p>📱 <strong>Controls:</strong> Tap anywhere on the screen to drop fruits</p>
+            <p>🔄 <strong>Merging:</strong> When two identical fruits touch, they combine into the next fruit</p>
+            <p>📈 <strong>Scoring:</strong> Bigger fruits = more points! Chain merges for combo bonuses</p>
+            <p>⚠️ <strong>Danger Zone:</strong> Don’t let fruits overflow the red line!</p>
+            <p>🏆 <strong>Fruit Chain:</strong><br>
+               🍒 → 🍓 → 🍇 → 🍊 → 🍎 → 🍐 → 🍑 → 🍍 → 🍈 → 🍉</p>
+            <button class="menu-btn" onclick="hideInstructions()">Got it!</button>
         </div>
     </div>
 
-    <script>
-        // Game variables
-        let canvas, ctx;
-        let gameState = 'menu';
-        let score = 0;
-        let combo = 0;
-        let comboMultiplier = 1.0;
-        let maxCombo = 0;
-        let watermelonCount = 0;
-        let fruits = [];
-        let currentFruit = null;
-        let nextFruitType = 0;
-        let dropX = 150;
-        let gameTime = 0;
-        let dangerTimer = 0;
-        let paused = false;
-        let lastTime = 0;
-        let gatePoints = 0;
-        let currentGate = 1;
-        let gateThreshold = 20; // Points needed to open first gate
-        let comboDecayTimer = 0;
-        
-        // Fruit types - Underwatermelon progression
-        const fruitTypes = [
-            { emoji: '🍓', color: '#FF69B4', size: 20, points: 1, name: 'Strawberry' },
-            { emoji: '🟣', color: '#8A2BE2', size: 26, points: 3, name: 'Plum' },
-            { emoji: '🍋', color: '#FFD700', size: 32, points: 6, name: 'Lemon' },
-            { emoji: '🍊', color: '#FF8C00', size: 40, points: 10, name: 'Orange' },
-            { emoji: '🍎', color: '#FF0000', size: 50, points: 15, name: 'Apple' },
-            { emoji: '🍐', color: '#9ACD32', size: 62, points: 21, name: 'Pear' },
-            { emoji: '🍑', color: '#FFB6C1', size: 76, points: 28, name: 'Peach' },
-            { emoji: '🥥', color: '#8B4513', size: 92, points: 36, name: 'Coconut' },
-            { emoji: '🍍', color: '#FFD700', size: 110, points: 45, name: 'Pineapple' },
-            { emoji: '🍈', color: '#98FB98', size: 130, points: 55, name: 'Melon' },
-            { emoji: '🍉', color: '#00FF7F', size: 152, points: 66, name: 'Watermelon' }
-        ];
-        
-        // Shiny fruit variants (unlocked after merging two watermelons)
-        const shinyFruitTypes = [
-            { emoji: '✨🍓', color: '#FF69B4', size: 20, points: 1, name: 'Shiny Strawberry', glow: true },
-            { emoji: '✨🟣', color: '#8A2BE2', size: 26, points: 3, name: 'Shiny Plum', glow: true },
-            { emoji: '✨🍋', color: '#FFD700', size: 32, points: 6, name: 'Shiny Lemon', glow: true },
-            { emoji: '✨🍊', color: '#FF8C00', size: 40, points: 10, name: 'Shiny Orange', glow: true },
-            { emoji: '✨🍎', color: '#FF0000', size: 50, points: 15, name: 'Shiny Apple', glow: true },
-            { emoji: '✨🍐', color: '#9ACD32', size: 62, points: 21, name: 'Shiny Pear', glow: true },
-            { emoji: '✨🍑', color: '#FFB6C1', size: 76, points: 28, name: 'Shiny Peach', glow: true },
-            { emoji: '✨🥥', color: '#8B4513', size: 92, points: 36, name: 'Shiny Coconut', glow: true },
-            { emoji: '✨🍍', color: '#FFD700', size: 110, points: 45, name: 'Shiny Pineapple', glow: true },
-            { emoji: '✨🍈', color: '#98FB98', size: 130, points: 55, name: 'Shiny Melon', glow: true },
-            { emoji: '✨🍉', color: '#00FF7F', size: 152, points: 66, name: 'Shiny Watermelon', glow: true }
-        ];
-        
-        const encouragements = ['Juicy!', 'TIDY!', 'Splash!', 'Wow!', 'Amazing!', 'Fantastic!'];
-        
-        // Initialize when page loads
-        window.addEventListener('load', function() {
-            initGame();
-        });
-        
-        function initGame() {
-            canvas = document.getElementById('gameCanvas');
-            if (!canvas) return;
-            
-            ctx = canvas.getContext('2d');
-            
-            // Touch controls
-            canvas.addEventListener('touchstart', function(e) {
-                e.preventDefault();
-                handleTouch(e);
-            }, { passive: false });
-            
-            canvas.addEventListener('touchmove', function(e) {
-                e.preventDefault();
-                handleTouchMove(e);
-            }, { passive: false });
-            
-            canvas.addEventListener('touchend', function(e) {
-                e.preventDefault();
-                dropFruit();
-            }, { passive: false });
-            
-            // Mouse controls
-            canvas.addEventListener('click', function(e) {
-                handleClick(e);
-            });
-            
-            canvas.addEventListener('mousemove', function(e) {
-                handleMouseMove(e);
-            });
-            
-            generateNextFruit();
-            gameLoop();
+    <!-- ─────── Game UI ─────── -->
+    <div id="gameUI">
+        <button id="pauseBtn" onclick="togglePause()">⏸️</button>
+
+        <div id="scoreBar">
+            <div id="score">Score: 0</div>
+            <div id="comboDisplay"></div>
+            <div id="nextFruit">🍒</div>
+        </div>
+
+        <canvas id="gameCanvas" width="300" height="400"></canvas>
+        <div id="waterline"></div>
+
+        <div class="octopus">🐙</div>
+        <div class="speech-bubble" id="speechBubble"></div>
+        <div class="danger-warning" id="dangerWarning">⚠️ DANGER ZONE! ⚠️</div>
+    </div>
+
+    <!-- ─────── Game Over ─────── -->
+    <div id="gameOverModal">
+        <div class="modal-content">
+            <h2>Game Over!</h2>
+            <div id="finalScore"></div>
+            <div id="finalStats"></div>
+            <button class="menu-btn" onclick="restartGame()">🔄 RETRY</button>
+            <button class="menu-btn" onclick="backToMenu()">🏠 MENU</button>
+        </div>
+    </div>
+</div>
+
+<script>
+/* ───────── GAME VARIABLES ───────── */
+let canvas,ctx,gameState='menu',score=0,combo=0,comboMultiplier=1,maxCombo=0,watermelonCount=0,
+    fruits=[],currentFruit=null,nextFruitType=0,dropX=150,dangerTimer=0,paused=false,
+    gatePoints=0,currentGate=1,gateThreshold=20,comboDecayTimer=0;
+
+/* ───────── FRUIT DATA ───────── */
+const fruitTypes=[
+    {emoji:'🍓',color:'#FF69B4',size:20,points:1},
+    {emoji:'🟣',color:'#8A2BE2',size:26,points:3},
+    {emoji:'🍋',color:'#FFD700',size:32,points:6},
+    {emoji:'🍊',color:'#FF8C00',size:40,points:10},
+    {emoji:'🍎',color:'#FF0000',size:50,points:15},
+    {emoji:'🍐',color:'#9ACD32',size:62,points:21},
+    {emoji:'🍑',color:'#FFB6C1',size:76,points:28},
+    {emoji:'🥥',color:'#8B4513',size:92,points:36},
+    {emoji:'🍍',color:'#FFD700',size:110,points:45},
+    {emoji:'🍈',color:'#98FB98',size:130,points:55},
+    {emoji:'🍉',color:'#00FF7F',size:152,points:66}
+];
+const shinyFruitTypes=fruitTypes.map(f=>({...f,emoji:'✨'+f.emoji,glow:true}));
+const encouragements=['Juicy!','TIDY!','Splash!','Wow!','Amazing!','Fantastic!'];
+
+/* ───────── INIT ───────── */
+window.addEventListener('load',initGame);
+function initGame(){
+    canvas=document.getElementById('gameCanvas');if(!canvas)return;
+    ctx=canvas.getContext('2d');
+
+    /* Touch */
+    canvas.addEventListener('touchstart',e=>{e.preventDefault();handleTouch(e)},{passive:false});
+    canvas.addEventListener('touchmove',e=>{e.preventDefault();handleTouch(e)},{passive:false});
+    canvas.addEventListener('touchend',e=>{e.preventDefault();dropFruit()},{passive:false});
+
+    /* Mouse */
+    canvas.addEventListener('click',handleClick);
+    canvas.addEventListener('mousemove',handleMouseMove);
+
+    generateNextFruit();
+    requestAnimationFrame(gameLoop);
+}
+
+/* ───────── INPUT HANDLERS ───────── */
+function handleTouch(e){
+    const r=canvas.getBoundingClientRect(),x=(e.touches[0].clientX-r.left)*(canvas.width/r.width);
+    dropX=Math.max(20,Math.min(canvas.width-20,x));
+}
+const handleTouchMove=handleTouch;
+function handleClick(e){
+    if(gameState!=='playing'||paused)return;
+    const r=canvas.getBoundingClientRect(),x=(e.clientX-r.left)*(canvas.width/r.width);
+    dropX=Math.max(20,Math.min(canvas.width-20,x));dropFruit();
+}
+function handleMouseMove(e){
+    if(gameState!=='playing'||paused)return;
+    const r=canvas.getBoundingClientRect(),x=(e.clientX-r.left)*(canvas.width/r.width);
+    dropX=Math.max(20,Math.min(canvas.width-20,x));
+}
+
+/* ───────── GAME LOOP ───────── */
+function gameLoop(){
+    if(gameState==='playing'){updatePhysics();render();updateUI()}
+    requestAnimationFrame(gameLoop);
+}
+
+/* ───────── FRUIT DROPPING ───────── */
+function generateNextFruit(){
+    nextFruitType=Math.floor(Math.random()*5);
+    document.getElementById('nextFruit').textContent=fruitTypes[nextFruitType].emoji;
+}
+function dropFruit(){
+    if(currentFruit||paused||gameState!=='playing')return;
+    const t=fruitTypes[nextFruitType];
+    currentFruit={x:dropX,y:canvas.height-30,vx:(Math.random()-.5)*2,vy:-8,
+                  type:nextFruitType,shiny:false,size:t.size,color:t.color,emoji:t.emoji,glow:false};
+    generateNextFruit();
+}
+
+/* ───────── PHYSICS ───────── */
+function updatePhysics(){
+    if(paused||gameState!=='playing')return;
+    const G=-4,DRAG=1.3;
+
+    /* Active fruit */
+    if(currentFruit){
+        applyBuoyancyDrag(currentFruit,G,DRAG,.1,.01);
+        currentFruit.y+=currentFruit.vy;currentFruit.x+=currentFruit.vx;
+
+        if(currentFruit.y-currentFruit.size/2<=5){
+            currentFruit.y=5+currentFruit.size/2;currentFruit.vy*=-.08;
+            if(Math.abs(currentFruit.vy)<.5){fruits.push(currentFruit);currentFruit=null;}
         }
-        
-        function handleTouch(e) {
-            const rect = canvas.getBoundingClientRect();
-            const touch = e.touches[0];
-            dropX = (touch.clientX - rect.left) * (canvas.width / rect.width);
-            dropX = Math.max(20, Math.min(canvas.width - 20, dropX));
-        }
-        
-        function handleTouchMove(e) {
-            const rect = canvas.getBoundingClientRect();
-            const touch = e.touches[0];
-            dropX = (touch.clientX - rect.left) * (canvas.width / rect.width);
-            dropX = Math.max(20, Math.min(canvas.width - 20, dropX));
-        }
-        
-        function handleClick(e) {
-            if (gameState !== 'playing' || paused) return;
-            const rect = canvas.getBoundingClientRect();
-            dropX = (e.clientX - rect.left) * (canvas.width / rect.width);
-            dropX = Math.max(20, Math.min(canvas.width - 20, dropX));
-            dropFruit();
-        }
-        
-        function handleMouseMove(e) {
-            if (gameState !== 'playing' || paused) return;
-            const rect = canvas.getBoundingClientRect();
-            dropX = (e.clientX - rect.left) * (canvas.width / rect.width);
-            dropX = Math.max(20, Math.min(canvas.width - 20, dropX));
-        }
-        
-        function generateNextFruit() {
-            nextFruitType = Math.floor(Math.random() * 5); // Only first 5 fruit types spawn from launch ring
-            document.getElementById('nextFruit').textContent = fruitTypes[nextFruitType].emoji;
-        }
-        
-        function dropFruit() {
-            if (currentFruit || paused || gameState !== 'playing') return;
-            
-            const fruitType = fruitTypes[nextFruitType];
-            currentFruit = {
-                x: dropX,
-                y: canvas.height - 30, // Launch from seabed
-                vx: (Math.random() - 0.5) * 2, // Small random horizontal velocity
-                vy: -8, // Strong upward launch velocity
-                type: nextFruitType,
-                shiny: false, // Only normal fruits spawn from launch ring
-                size: fruitType.size,
-                color: fruitType.color,
-                emoji: fruitType.emoji,
-                glow: false,
-                settled: false
-            };
-            
-            generateNextFruit();
-        }
-        
-        function updatePhysics() {
-            if (paused || gameState !== 'playing') return;
-            
-            // INVERTED PHYSICS: Fruits float upward with buoyancy
-            const BUOYANT_GRAVITY = -4.0; // Upward acceleration (inverted gravity)
-            const DRAG_COEFFICIENT = 1.3; // High drag for underwater feel
-            const ANGULAR_DRAG = 2.0; // Resistance to spinning
-            
-            // Update falling fruit
-            if (currentFruit) {
-                // Apply buoyant force (upward gravity)
-                currentFruit.vy += BUOYANT_GRAVITY * 0.1; // Gentle upward acceleration
-                
-                // Apply drag (underwater resistance)
-                const speed = Math.sqrt(currentFruit.vx * currentFruit.vx + currentFruit.vy * currentFruit.vy);
-                if (speed > 0) {
-                    const dragForce = DRAG_COEFFICIENT * speed * speed * 0.01;
-                    currentFruit.vx -= (currentFruit.vx / speed) * dragForce;
-                    currentFruit.vy -= (currentFruit.vy / speed) * dragForce;
-                }
-                
-                currentFruit.y += currentFruit.vy;
-                currentFruit.x += currentFruit.vx;
-                
-                // INVERTED: Collision with TOP (ceiling) instead of bottom
-                if (currentFruit.y - currentFruit.size/2 <= 5) {
-                    currentFruit.y = 5 + currentFruit.size/2;
-                    currentFruit.vy *= -0.08; // Low restitution (syrupy bounce)
-                    if (Math.abs(currentFruit.vy) < 0.5) {
-                        fruits.push(currentFruit);
-                        currentFruit = null;
-                    }
-                }
-                
-                // Wall collisions with friction
-                if (currentFruit) {
-                    if (currentFruit.x - currentFruit.size/2 <= 0) {
-                        currentFruit.x = currentFruit.size/2;
-                        currentFruit.vx *= -0.3;
-                    }
-                    if (currentFruit.x + currentFruit.size/2 >= canvas.width) {
-                        currentFruit.x = canvas.width - currentFruit.size/2;
-                        currentFruit.vx *= -0.3;
-                    }
-                }
-            }
-            
-            // Update existing fruits with buoyant physics
-            fruits.forEach(fruit => {
-                // Buoyant force scales with volume (bigger fruits rise slightly faster)
-                const volumeScale = Math.pow(fruit.size / 20, 0.5); // √r scaling
-                fruit.vy += BUOYANT_GRAVITY * 0.08 * volumeScale;
-                
-                // Underwater drag
-                const speed = Math.sqrt(fruit.vx * fruit.vx + fruit.vy * fruit.vy);
-                if (speed > 0) {
-                    const dragForce = DRAG_COEFFICIENT * speed * speed * 0.008;
-                    fruit.vx -= (fruit.vx / speed) * dragForce;
-                    fruit.vy -= (fruit.vy / speed) * dragForce;
-                }
-                
-                fruit.y += fruit.vy;
-                fruit.x += fruit.vx;
-                
-                // INVERTED: Collision with TOP boundary
-                if (fruit.y - fruit.size/2 <= 5) {
-                    fruit.y = 5 + fruit.size/2;
-                    fruit.vy *= -0.08; // Syrupy bounce
-                }
-                
-                // Wall collisions
-                if (fruit.x - fruit.size/2 <= 0) {
-                    fruit.x = fruit.size/2;
-                    fruit.vx *= -0.4; // More friction on walls
-                }
-                if (fruit.x + fruit.size/2 >= canvas.width) {
-                    fruit.x = canvas.width - fruit.size/2;
-                    fruit.vx *= -0.4;
-                }
-                
-                // Higher damping for underwater feel
-                fruit.vx *= 0.96; // More drag
-                fruit.vy *= 0.97;
-            });
-            
-            checkCollisions();
-            checkMerges();
-            checkDangerZone();
-        }
-        
-        function checkCollisions() {
-            for (let i = 0; i < fruits.length; i++) {
-                for (let j = i + 1; j < fruits.length; j++) {
-                    const fruit1 = fruits[i];
-                    const fruit2 = fruits[j];
-                    
-                    const dx = fruit2.x - fruit1.x;
-                    const dy = fruit2.y - fruit1.y;
-                    const distance = Math.sqrt(dx * dx + dy * dy);
-                    const minDistance = (fruit1.size + fruit2.size) / 2;
-                    
-                    if (distance < minDistance && distance > 0) {
-                        const overlap = minDistance - distance;
-                        const moveX = (dx / distance) * overlap * 0.5;
-                        const moveY = (dy / distance) * overlap * 0.5;
-                        
-                        fruit1.x -= moveX;
-                        fruit1.y -= moveY;
-                        fruit2.x += moveX;
-                        fruit2.y += moveY;
-                    }
-                }
+        wallCollide(currentFruit,.3);
+    }
+
+    /* Settled fruits */
+    fruits.forEach(f=>{applyBuoyancyDrag(f,G,DRAG*.8,.008,.08*Math.pow(f.size/20,.5));wallCollide(f,.4);f.vx*=.96;f.vy*=.97});
+
+    checkCollisions();checkMerges();checkDangerZone();
+}
+function applyBuoyancyDrag(f,G,DRAG,buoyScale,dragScale){
+    f.vy+=G*buoyScale;
+    const s=Math.hypot(f.vx,f.vy);if(s){
+        const drag=DRAG*s*s*dragScale;f.vx-=(f.vx/s)*drag;f.vy-=(f.vy/s)*drag;
+    }
+}
+function wallCollide(f,rest){
+    if(f.x-f.size/2<=0){f.x=f.size/2;f.vx*=-rest}
+    if(f.x+f.size/2>=canvas.width){f.x=canvas.width-f.size/2;f.vx*=-rest}
+}
+
+/* ───────── COLLISIONS / MERGE ───────── */
+function checkCollisions(){
+    for(let i=0;i<fruits.length;i++){
+        for(let j=i+1;j<fruits.length;j++){
+            const a=fruits[i],b=fruits[j],
+                  dx=b.x-a.x,dy=b.y-a.y,dist=Math.hypot(dx,dy),
+                  min=(a.size+b.size)/2;
+            if(dist<min&&dist>0){
+                const over=min-dist,moveX=(dx/dist)*over*.5,moveY=(dy/dist)*over*.5;
+                a.x-=moveX;a.y-=moveY;b.x+=moveX;b.y+=moveY;
             }
         }
-        
-        function checkMerges() {
-            for (let i = fruits.length - 1; i >= 0; i--) {
-                for (let j = i - 1; j >= 0; j--) {
-                    const fruit1 = fruits[i];
-                    const fruit2 = fruits[j];
-                    
-                    // Calculate distance between fruit centers
-                    const dx = fruit2.x - fruit1.x;
-                    const dy = fruit2.y - fruit1.y;
-                    const distance = Math.sqrt(dx * dx + dy * dy);
-                    
-                    // More generous merge distance - fruits should merge when overlapping
-                    const mergeDistance = (fruit1.size + fruit2.size) / 2.5;
-                    
-                    // Check if fruits are close enough and can merge
-                    if (distance < mergeDistance && canMerge(fruit1, fruit2)) {
-                        performMerge(fruit1, fruit2, i, j);
-                        return; // Only one merge per frame
-                    }
-                }
-            }
-            
-            // Decay combo over time
-            comboDecayTimer += 1/60;
-            if (comboDecayTimer > 3) { // 3 seconds without merge
-                if (comboMultiplier > 1.0) {
-                    comboMultiplier = Math.max(1.0, comboMultiplier - 0.5);
-                    comboDecayTimer = 0;
-                }
-            }
+    }
+}
+function checkMerges(){
+    for(let i=fruits.length-1;i>=0;i--)for(let j=i-1;j>=0;j--){
+        const a=fruits[i],b=fruits[j],
+              dist=Math.hypot(b.x-a.x,b.y-a.y),
+              mergeDist=(a.size+b.size)/2.5;
+        if(dist<mergeDist&&canMerge(a,b)){performMerge(a,b,i,j);return;}
+    }
+    comboDecayTimer+=1/60;if(comboDecayTimer>3&&comboMultiplier>1){
+        comboMultiplier=Math.max(1,comboMultiplier-.5);comboDecayTimer=0;
+    }
+}
+function canMerge(a,b){
+    if(a.type===b.type&&a.shiny===b.shiny)return true;
+    if(a.type===10&&b.type===10)return true;
+    return false;
+}
+function performMerge(a,b,i,j){
+    const midX=(a.x+b.x)/2,midY=(a.y+b.y)/2;
+    fruits.splice(i,1);fruits.splice(j,1);
+    let newF=null,pts=0;
+
+    if(a.type===10&&b.type===10){
+        if(a.shiny||b.shiny){
+            pts=shinyFruitTypes[10].points; /* both shiny OR mixed: board clear */
+        }else{
+            newF=createFruit(midX,midY,0,true,-4);pts=fruitTypes[0].points;
         }
-        
-        function canMerge(fruit1, fruit2) {
-            // Basic same-type merge for normal fruits
-            if (fruit1.type === fruit2.type && fruit1.shiny === fruit2.shiny) {
-                return true;
-            }
-            
-            // Special watermelon cases
-            if (fruit1.type === 10 && fruit2.type === 10) {
-                // Two regular watermelons can merge to create shiny strawberry
-                if (!fruit1.shiny && !fruit2.shiny) return true;
-                // Two shiny watermelons can merge to disappear
-                if (fruit1.shiny && fruit2.shiny) return true;
-                // Mixed shiny/normal watermelon merge to reset
-                if (fruit1.shiny !== fruit2.shiny) return true;
-            }
-            
-            return false;
+    }else{
+        const next=a.type+1,isShiny=a.shiny;
+        if(next<fruitTypes.length){
+            newF=createFruit(midX,midY,next,isShiny,-4);
+            pts=isShiny?shinyFruitTypes[next].points:fruitTypes[next].points;
         }
-        
-        function performMerge(fruit1, fruit2, index1, index2) {
-            const midX = (fruit1.x + fruit2.x) / 2;
-            const midY = (fruit1.y + fruit2.y) / 2;
-            
-            // Remove old fruits first
-            fruits.splice(index1, 1);
-            fruits.splice(index2, 1);
-            
-            let newFruit = null;
-            let pointsAwarded = 0;
-            
-            // Handle special watermelon merges
-            if (fruit1.type === 10 && fruit2.type === 10) {
-                if (!fruit1.shiny && !fruit2.shiny) {
-                    // Two regular watermelons → Shiny Strawberry
-                    newFruit = createFruit(midX, midY, 0, true, -4);
-                    pointsAwarded = fruitTypes[0].points;
-                } else if (fruit1.shiny && fruit2.shiny) {
-                    // Two shiny watermelons → Disappear (board clear)
-                    pointsAwarded = shinyFruitTypes[10].points;
-                    // Don't create new fruit - just clear space
-                } else {
-                    // Mixed shiny/normal → Reset to Shiny Strawberry
-                    newFruit = createFruit(midX, midY, 0, true, -4);
-                    pointsAwarded = fruitTypes[0].points;
-                }
-            } else {
-                // Normal progression merge
-                const nextType = fruit1.type + 1;
-                if (nextType < fruitTypes.length) {
-                    const isShiny = fruit1.shiny;
-                    newFruit = createFruit(midX, midY, nextType, isShiny, -4);
-                    pointsAwarded = isShiny ? shinyFruitTypes[nextType].points : fruitTypes[nextType].points;
-                }
-            }
-            
-            // Update scoring
-            const earnedPoints = Math.floor(pointsAwarded * comboMultiplier);
-            score += earnedPoints;
-            gatePoints += pointsAwarded; // Gate points use base value
-            
-            // Increase combo multiplier
-            comboMultiplier = Math.min(7.5, comboMultiplier + 0.5);
-            combo++;
-            maxCombo = Math.max(maxCombo, combo);
-            comboDecayTimer = 0;
-            
-            // Check for gate opening
-            checkGateProgress();
-            
-            // Show encouragement for good combos
-            if (comboMultiplier > 2.0) {
-                const messages = ['Juicy!', 'TIDY!', 'Splash!', 'Wow!', 'Amazing!', 'Fantastic!'];
-                showSpeechBubble(messages[Math.floor(Math.random() * messages.length)]);
-            }
-            
-            updateUI();
-        }
-        
-        function createFruit(x, y, type, shiny = false, initialVY = -4) {
-            const fruitData = shiny ? shinyFruitTypes[type] : fruitTypes[type];
-            const newFruit = {
-                x: x,
-                y: y,
-                vx: (Math.random() - 0.5) * 2, // Small random horizontal velocity for billiards effect
-                vy: initialVY, // Strong upward impulse
-                type: type,
-                shiny: shiny,
-                size: fruitData.size,
-                color: fruitData.color,
-                emoji: fruitData.emoji,
-                glow: fruitData.glow || false,
-                settled: false
-            };
-            
-            fruits.push(newFruit);
-            
-            if (type === 10) { // Watermelon created
-                watermelonCount++;
-            }
-            
-            return newFruit;
-        }
-        
-        function checkGateProgress() {
-            if (gatePoints >= gateThreshold) {
-                openGate();
-            }
-        }
-        
-        function openGate() {
-            // Move all fruits upward (simulate camera scroll)
-            fruits.forEach(fruit => {
-                fruit.y -= 100;
-                fruit.vy -= 2; // Extra upward boost
-            });
-            
-            currentGate++;
-            gatePoints = 0;
-            gateThreshold += 15; // Each gate needs more points
-            
-            showSpeechBubble("GATE OPENED!");
-        }
-        
-        function checkDangerZone() {
-            // INVERTED DANGER ZONE: Red line is at BOTTOM (fruits must not sink too low)
-            const dangerY = canvas.height - 80; // Bottom danger zone
-            let inDanger = false;
-            
-            fruits.forEach(fruit => {
-                if (fruit.y + fruit.size/2 >= dangerY) {
-                    inDanger = true;
-                }
-            });
-            
-            if (currentFruit && currentFruit.y + currentFruit.size/2 >= dangerY) {
-                inDanger = true;
-            }
-            
-            if (inDanger) {
-                dangerTimer += 1/60;
-                document.getElementById('dangerWarning').style.display = 'block';
-                
-                if (dangerTimer >= 3) {
-                    gameOver();
-                }
-            } else {
-                dangerTimer = 0;
-                document.getElementById('dangerWarning').style.display = 'none';
-            }
-        }
-        
-        function render() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            // Background
-            const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-            gradient.addColorStop(0, 'rgba(173, 216, 230, 0.3)');
-            gradient.addColorStop(1, 'rgba(100, 149, 237, 0.5)');
-            ctx.fillStyle = gradient;
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            
-            // Launch ring at bottom (seabed launcher)
-            ctx.strokeStyle = 'rgba(255, 215, 0, 0.8)';
-            ctx.lineWidth = 3;
-            ctx.setLineDash([]);
-            ctx.beginPath();
-            ctx.arc(dropX, canvas.height - 25, 30, 0, Math.PI * 2);
-            ctx.stroke();
-            
-            // Launch ring glow
-            ctx.strokeStyle = 'rgba(255, 215, 0, 0.4)';
-            ctx.lineWidth = 6;
-            ctx.beginPath();
-            ctx.arc(dropX, canvas.height - 25, 35, 0, Math.PI * 2);
-            ctx.stroke();
-            
-            // Preview fruit in launch ring
-            if (!currentFruit && !paused && gameState === 'playing') {
-                const previewType = fruitTypes[nextFruitType];
-                ctx.save();
-                ctx.globalAlpha = 0.8;
-                ctx.fillStyle = previewType.color;
-                ctx.beginPath();
-                ctx.arc(dropX, canvas.height - 25, previewType.size / 2, 0, Math.PI * 2);
-                ctx.fill();
-                
-                ctx.globalAlpha = 1;
-                ctx.font = `${previewType.size * 0.5}px Arial`;
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                ctx.fillText(previewType.emoji, dropX, canvas.height - 25);
-                ctx.restore();
-            }
-            
-            // Draw fruits
-            if (currentFruit) {
-                drawFruit(currentFruit);
-            }
-            
-            fruits.forEach(drawFruit);
-            drawBubbles();
-        }
-        
-        function drawFruit(fruit) {
-            ctx.save();
-            
-            // Enhanced shadow with depth
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
-            ctx.beginPath();
-            ctx.arc(fruit.x + 3, fruit.y + 4, fruit.size / 2, 0, Math.PI * 2);
-            ctx.fill();
-            
-            // Shiny glow effect for shiny fruits
-            if (fruit.glow) {
-                const glowGradient = ctx.createRadialGradient(
-                    fruit.x, fruit.y, fruit.size / 6,
-                    fruit.x, fruit.y, fruit.size * 0.8
-                );
-                glowGradient.addColorStop(0, 'rgba(255, 255, 255, 0.8)');
-                glowGradient.addColorStop(0.3, 'rgba(255, 255, 255, 0.4)');
-                glowGradient.addColorStop(0.7, 'rgba(255, 255, 255, 0.1)');
-                glowGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
-                ctx.fillStyle = glowGradient;
-                ctx.beginPath();
-                ctx.arc(fruit.x, fruit.y, fruit.size * 0.8, 0, Math.PI * 2);
-                ctx.fill();
-            }
-            
-            // Main fruit body with depth
-            const bodyGradient = ctx.createRadialGradient(
-                fruit.x, fruit.y, fruit.size / 8,
-                fruit.x, fruit.y, fruit.size / 2
-            );
-            bodyGradient.addColorStop(0, fruit.color);
-            bodyGradient.addColorStop(0.7, fruit.color);
-            bodyGradient.addColorStop(1, shadeColor(fruit.color, -20));
-            ctx.fillStyle = bodyGradient;
-            ctx.beginPath();
-            ctx.arc(fruit.x, fruit.y, fruit.size / 2, 0, Math.PI * 2);
-            ctx.fill();
-            
-            // Glossy highlight
-            const highlightGradient = ctx.createRadialGradient(
-                fruit.x - fruit.size/4, fruit.y - fruit.size/4, 0,
-                fruit.x - fruit.size/6, fruit.y - fruit.size/6, fruit.size/3
-            );
-            highlightGradient.addColorStop(0, 'rgba(255, 255, 255, 0.6)');
-            highlightGradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.2)');
-            highlightGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
-            ctx.fillStyle = highlightGradient;
-            ctx.beginPath();
-            ctx.arc(fruit.x, fruit.y, fruit.size / 2, 0, Math.PI * 2);
-            ctx.fill();
-            
-            // Emoji with better sizing
-            ctx.font = `${fruit.size * 0.35}px Arial`;
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
-            ctx.fillText(fruit.emoji, fruit.x + 1, fruit.y + 1); // Shadow
-            ctx.fillStyle = 'white';
-            ctx.fillText(fruit.emoji, fruit.x, fruit.y);
-            
-            ctx.restore();
-        }
-        
-        // Helper function to darken/lighten colors
-        function shadeColor(color, percent) {
-            const num = parseInt(color.replace("#",""), 16);
-            const amt = Math.round(2.55 * percent);
-            const R = (num >> 16) + amt;
-            const G = (num >> 8 & 0x00FF) + amt;
-            const B = (num & 0x0000FF) + amt;
-            return "#" + (0x1000000 + (R < 255 ? R < 1 ? 0 : R : 255) * 0x10000 +
-                (G < 255 ? G < 1 ? 0 : G : 255) * 0x100 +
-                (B < 255 ? B < 1 ? 0 : B : 255)).toString(16).slice(1);
-        }
-        
-        function drawEnhancedBubbles() {
-            const time = Date.now() * 0.001;
-            
-            // Multiple layers of bubbles for depth
-            for (let layer = 0; layer < 3; layer++) {
-                const layerAlpha = 0.2 + (layer * 0.1);
-                const layerSpeed = 1 + (layer * 0.5);
-                
-                for (let i = 0; i < 4; i++) {
-                    const x = (Math.sin(time * layerSpeed + i * 1.5) * 60) + canvas.width / 2;
-                    const y = canvas.height - ((time * (15 + layer * 5) + i * 100) % (canvas.height + 50));
-                    const size = 2 + Math.sin(time + i) * 1 + layer * 0.5;
-                    
-                    // Bubble with gradient
-                    const bubbleGradient = ctx.createRadialGradient(
-                        x - size/3, y - size/3, 0,
-                        x, y, size
-                    );
-                    bubbleGradient.addColorStop(0, `rgba(255, 255, 255, ${layerAlpha * 0.8})`);
-                    bubbleGradient.addColorStop(0.7, `rgba(173, 216, 230, ${layerAlpha * 0.4})`);
-                    bubbleGradient.addColorStop(1, `rgba(135, 206, 235, ${layerAlpha * 0.1})`);
-                    
-                    ctx.fillStyle = bubbleGradient;
-                    ctx.beginPath();
-                    ctx.arc(x, y, size, 0, Math.PI * 2);
-                    ctx.fill();
-                    
-                    // Bubble highlight
-                    ctx.fillStyle = `rgba(255, 255, 255, ${layerAlpha * 0.6})`;
-                    ctx.beginPath();
-                    ctx.arc(x - size/3, y - size/3, size/3, 0, Math.PI * 2);
-                    ctx.fill();
-                }
-            }
-        }
-        
-        function updateUI() {
-            document.getElementById('score').textContent = `Score: ${score.toLocaleString()}`;
-            
-            const comboDisplay = document.getElementById('comboDisplay');
-            if (comboMultiplier > 1.0) {
-                comboDisplay.textContent = `x${comboMultiplier.toFixed(1)} JUICY!`;
-                comboDisplay.style.color = comboMultiplier > 5.0 ? '#FF69B4' : '#00FFFF';
-            } else {
-                comboDisplay.textContent = `Gate ${currentGate}: ${gatePoints}/${gateThreshold}`;
-                comboDisplay.style.color = '#FFFFFF';
-            }
-        }
-        
-        function showSpeechBubble(text) {
-            const bubble = document.getElementById('speechBubble');
-            bubble.textContent = text;
-            bubble.classList.add('show');
-            
-            setTimeout(() => {
-                bubble.classList.remove('show');
-            }, 2000);
-        }
-        
-        function gameLoop() {
-            if (gameState === 'playing') {
-                updatePhysics();
-                render();
-                updateUI();
-            }
-            requestAnimationFrame(gameLoop);
-        }
-        
-        // Game state functions
-        function startGame() {
-            document.getElementById('menu').style.display = 'none';
-            document.getElementById('gameUI').style.display = 'block';
-            gameState = 'playing';
-            resetGame();
-        }
-        
-        function resetGame() {
-            score = 0;
-            combo = 0;
-            comboMultiplier = 1.0;
-            maxCombo = 0;
-            watermelonCount = 0;
-            fruits = [];
-            currentFruit = null;
-            gameTime = 0;
-            dangerTimer = 0;
-            paused = false;
-            gatePoints = 0;
-            currentGate = 1;
-            gateThreshold = 20;
-            comboDecayTimer = 0;
-            generateNextFruit();
-            updateUI();
-        }
-        
-        function togglePause() {
-            paused = !paused;
-            document.getElementById('pauseBtn').textContent = paused ? '▶️' : '⏸️';
-        }
-        
-        function gameOver() {
-            gameState = 'gameOver';
-            document.getElementById('finalScore').textContent = `Final Score: ${score.toLocaleString()}`;
-            document.getElementById('finalStats').innerHTML = `
-                <p>Highest Combo: x${maxCombo}</p>
-                <p>Watermelons Created: ${watermelonCount}</p>
-            `;
-            document.getElementById('gameOverModal').style.display = 'flex';
-        }
-        
-        function restartGame() {
-            document.getElementById('gameOverModal').style.display = 'none';
-            gameState = 'playing';
-            resetGame();
-        }
-        
-        function backToMenu() {
-            document.getElementById('gameOverModal').style.display = 'none';
-            document.getElementById('gameUI').style.display = 'none';
-            document.getElementById('menu').style.display = 'flex';
-            gameState = 'menu';
-        }
-        
-        function showInstructions() {
-            document.getElementById('instructions').style.display = 'flex';
-        }
-        
-        function hideInstructions() {
-            document.getElementById('instructions').style.display = 'none';
-        }
-    </script>
+    }
+
+    const earned=Math.floor(pts*comboMultiplier);score+=earned;gatePoints+=pts;
+    comboMultiplier=Math.min(7.5,comboMultiplier+.5);combo++;maxCombo=Math.max(maxCombo,combo);comboDecayTimer=0;
+    checkGateProgress();
+    if(comboMultiplier>2)showSpeechBubble(encouragements[Math.floor(Math.random()*encouragements.length)]);
+    updateUI();
+}
+function createFruit(x,y,type,shiny=false,vy=-4){
+    const d=shiny?shinyFruitTypes[type]:fruitTypes[type],
+          f={x,y,vx:(Math.random()-.5)*2,vy,size:d.size,color:d.color,emoji:d.emoji,type,shiny,glow:d.glow||false};
+    fruits.push(f);if(type===10)watermelonCount++;return f;
+}
+
+/* ───────── GATES / DANGER ───────── */
+function checkGateProgress(){if(gatePoints>=gateThreshold)openGate();}
+function openGate(){
+    fruits.forEach(f=>{f.y-=100;f.vy-=2});currentGate++;gatePoints=0;gateThreshold+=15;showSpeechBubble('GATE OPENED!');
+}
+function checkDangerZone(){
+    const limit=canvas.height-80;let danger=false;
+    fruits.forEach(f=>{if(f.y+f.size/2>=limit)danger=true});
+    if(currentFruit&&currentFruit.y+currentFruit.size/2>=limit)danger=true;
+    if(danger){dangerTimer+=1/60;document.getElementById('dangerWarning').style.display='block';
+        if(dangerTimer>=3)gameOver();
+    }else{dangerTimer=0;document.getElementById('dangerWarning').style.display='none'}
+}
+
+/* ───────── RENDER ───────── */
+function render(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+
+    /* background gradient inside canvas */
+    const g=ctx.createLinearGradient(0,0,0,canvas.height);
+    g.addColorStop(0,'rgba(173,216,230,.3)');g.addColorStop(1,'rgba(100,149,237,.5)');
+    ctx.fillStyle=g;ctx.fillRect(0,0,canvas.width,canvas.height);
+
+    /* launch ring */
+    ctx.strokeStyle='rgba(255,215,0,.8)';ctx.lineWidth=3;ctx.beginPath();
+    ctx.arc(dropX,canvas.height-25,30,0,Math.PI*2);ctx.stroke();
+    ctx.strokeStyle='rgba(255,215,0,.4)';ctx.lineWidth=6;ctx.beginPath();
+    ctx.arc(dropX,canvas.height-25,35,0,Math.PI*2);ctx.stroke();
+
+    /* preview */
+    if(!currentFruit&&!paused&&gameState==='playing'){
+        const p=fruitTypes[nextFruitType];ctx.save();ctx.globalAlpha=.8;ctx.fillStyle=p.color;
+        ctx.beginPath();ctx.arc(dropX,canvas.height-25,p.size/2,0,Math.PI*2);ctx.fill();
+        ctx.globalAlpha=1;ctx.font=`${p.size*.5}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
+        ctx.fillText(p.emoji,dropX,canvas.height-25);ctx.restore();
+    }
+
+    /* fruits */
+    if(currentFruit)drawFruit(currentFruit);fruits.forEach(drawFruit);
+    drawBubbles();
+}
+
+/* ───────── FRUIT DRAWING WITH DEPTH ───────── */
+function drawFruit(f){
+    ctx.save();
+
+    /* soft shadow */
+    ctx.fillStyle='rgba(0,0,0,.3)';
+    ctx.beginPath();ctx.arc(f.x+3,f.y+4,f.size/2,0,Math.PI*2);ctx.fill();
+
+    /* glow for shiny */
+    if(f.glow){
+        const gg=ctx.createRadialGradient(f.x,f.y,f.size/6,f.x,f.y,f.size*.8);
+        gg.addColorStop(0,'rgba(255,255,255,.8)');gg.addColorStop(.3,'rgba(255,255,255,.4)');
+        gg.addColorStop(.7,'rgba(255,255,255,.1)');gg.addColorStop(1,'rgba(255,255,255,0)');
+        ctx.fillStyle=gg;ctx.beginPath();ctx.arc(f.x,f.y,f.size*.8,0,Math.PI*2);ctx.fill();
+    }
+
+    /* body gradient */
+    const bg=ctx.createRadialGradient(f.x,f.y,f.size/8,f.x,f.y,f.size/2);
+    bg.addColorStop(0,f.color);bg.addColorStop(.7,f.color);bg.addColorStop(1,shadeColor(f.color,-20));
+    ctx.fillStyle=bg;ctx.beginPath();ctx.arc(f.x,f.y,f.size/2,0,Math.PI*2);ctx.fill();
+
+    /* glossy highlight */
+    const hg=ctx.createRadialGradient(f.x-f.size/4,f.y-f.size/4,0,f.x-f.size/6,f.y-f.size/6,f.size/3);
+    hg.addColorStop(0,'rgba(255,255,255,.6)');hg.addColorStop(.5,'rgba(255,255,255,.2)');hg.addColorStop(1,'transparent');
+    ctx.fillStyle=hg;ctx.beginPath();ctx.arc(f.x,f.y,f.size/2,0,Math.PI*2);ctx.fill();
+
+    /* emoji */
+    ctx.font=`${f.size*.35}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillStyle='rgba(0,0,0,.8)';ctx.fillText(f.emoji,f.x+1,f.y+1);
+    ctx.fillStyle='#fff';ctx.fillText(f.emoji,f.x,f.y);
+
+    ctx.restore();
+}
+function shadeColor(col,percent){
+    const num=parseInt(col.slice(1),16),amt=Math.round(2.55*percent),
+          R=(num>>16)+amt,G=(num>>8&0x00FF)+amt,B=(num&0x0000FF)+amt;
+    return '#'+(0x1000000+(R<255?R<1?0:R:255)*0x10000+(G<255?G<1?0:G:255)*0x100+(B<255?B<1?0:B:255)).toString(16).slice(1);
+}
+
+/* ───────── SIMPLE BUBBLES ───────── */
+function drawBubbles(){
+    const t=Date.now()*0.001;ctx.fillStyle='rgba(255,255,255,.4)';
+    for(let i=0;i<3;i++){
+        const x=Math.sin(t*.5+i*2)*40+canvas.width/2,y=canvas.height-((t*20+i*80)%canvas.height),
+              s=2+Math.sin(t+i)*1;
+        ctx.beginPath();ctx.arc(x,y,s,0,Math.PI*2);ctx.fill();
+    }
+}
+
+/* ───────── UI / STATE ───────── */
+function updateUI(){
+    document.getElementById('score').textContent=`Score: ${score.toLocaleString()}`;
+    const cd=document.getElementById('comboDisplay');
+    if(comboMultiplier>1){
+        cd.textContent=`x${comboMultiplier.toFixed(1)} JUICY!`;
+        cd.style.color=comboMultiplier>5?'#FF69B4':'#00FFFF';
+    }else{
+        cd.textContent=`Gate ${currentGate}: ${gatePoints}/${gateThreshold}`;
+        cd.style.color='#fff';
+    }
+}
+function showSpeechBubble(txt){
+    const b=document.getElementById('speechBubble');b.textContent=txt;b.classList.add('show');
+    setTimeout(()=>b.classList.remove('show'),2000);
+}
+
+/* ───────── MENU / PAUSE / GAME OVER ───────── */
+function startGame(){
+    document.getElementById('menu').style.display='none';
+    document.getElementById('gameUI').style.display='block';
+    gameState='playing';resetGame();
+}
+function resetGame(){
+    score=combo=0;comboMultiplier=1;maxCombo=watermelonCount=0;fruits.length=0;currentFruit=null;
+    dangerTimer=0;paused=false;gatePoints=0;currentGate=1;gateThreshold=20;comboDecayTimer=0;
+    generateNextFruit();updateUI();
+}
+function togglePause(){paused=!paused;document.getElementById('pauseBtn').textContent=paused?'▶️':'⏸️'}
+function gameOver(){
+    gameState='gameOver';
+    document.getElementById('finalScore').textContent=`Final Score: ${score.toLocaleString()}`;
+    document.getElementById('finalStats').innerHTML=`<p>Highest Combo: x${maxCombo}</p><p>Watermelons Created: ${watermelonCount}</p>`;
+    document.getElementById('gameOverModal').style.display='flex';
+}
+function restartGame(){document.getElementById('gameOverModal').style.display='none';gameState='playing';resetGame();}
+function backToMenu(){
+    document.getElementById('gameOverModal').style.display='none';
+    document.getElementById('gameUI').style.display='none';
+    document.getElementById('menu').style.display='flex';gameState='menu';
+}
+function showInstructions(){document.getElementById('instructions').style.display='flex'}
+function hideInstructions(){document.getElementById('instructions').style.display='none'}
+</script>
 </body>
 </html>
