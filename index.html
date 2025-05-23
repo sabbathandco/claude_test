@@ -1,22 +1,4 @@
-        function performMerge(fruit1, fruit2, index1, index2) {
-            const midX = (fruit1.x + fruit2.x) / 2;
-            const midY = (fruit1.y + fruit2.y) / 2;
-            
-            // Create merge effect particles
-            createMergeEffect(midX, midY, fruit1.size);
-            
-            // Remove old fruits first
-            fruits.splice(index1, 1);
-            fruits.splice(index2, 1);
-            
-            let newFruit = null;
-            let pointsAwarded = 0;
-            
-            // Handle special watermelon merges
-            if (fruit1.type === 10 && fruit2.type === 10) {
-                if (!fruit1.shiny && !fruit2.shiny) {
-                    // Two regular watermelons → Shiny Strawberry
-                    new<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
